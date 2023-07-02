@@ -4,7 +4,7 @@
   "plugins_base_url": "https://github.com/Aeliux/arcane/{content_type}/{tag}/plugins",
   "plugins": {
     "open_actor": {
-      "description": "Library for injecting tasks to actor objects.",
+      "description": "A Library for injecting tasks to actor objects like Bomb and Powerups.",
       "external_url": "",
       "authors": [
         {
