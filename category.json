@@ -32,6 +32,19 @@
           "md5sum": "d8a5906ddf8b438bd7e8c2918dd9aaff"
         }
       }
+    },
+    "open_actor": {
+      "description": "Library for injecting tasks to actor objects.",
+      "external_url": "",
+      "authors": [
+        {
+          "name": "Aeliux",
+          "email": "itsaeliux@gmail.com"
+        }
+      ],
+      "versions": {
+        "1.0.0": null
+      }
     }
   }
 }
