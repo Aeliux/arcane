@@ -308,6 +308,8 @@ def show_damage_count(
     #  get the intended results).
     assert app.classic is not None
     do_big = app.ui_v1.uiscale is babase.UIScale.SMALL or app.vr_mode
+    scale = 0.015 if do_big else 0.01
+    damage_value = int(damage[1:-1])
     txtnode = bs.newnode(
         'text',
         attrs={
@@ -317,7 +319,7 @@ def show_damage_count(
             'flatness': 1.0,
             'shadow': 1.0 if do_big else 0.7,
             'color': color,
-            'scale': 0.015 if do_big else 0.01,
+            'scale': scale * (damage_value / 40),
         },
     )
     # Translate upward.
