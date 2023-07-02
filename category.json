@@ -3,36 +3,6 @@
   "description": "Source of awesome mods created by Aeliux.",
   "plugins_base_url": "https://github.com/Aeliux/arcane/{content_type}/{tag}/plugins",
   "plugins": {
-    "mels_sticky_bomb_recipe": {
-      "description": "In the kitchen's crucible, where spices pirouette and blades do whisper, a treacherous liaison emerges, entwining culinary prowess with the volatile specter of explosive might.",
-      "external_url": "",
-      "authors": [
-        {
-          "name": "Mel the Cook",
-          "email": "meldoesnotreply@example.com"
-        }
-      ],
-      "versions": {
-        "2.0.0": {
-          "api_version": 8,
-          "commit_sha": "1a5d1ded",
-          "released_on": "30-06-2023",
-          "md5sum": "7bd030540151c3e4b4f01b5c143a8a32"
-        },
-        "1.0.1": {
-          "api_version": 7,
-          "commit_sha": "2b324410",
-          "released_on": "17-05-2023",
-          "md5sum": "18a105e100804a63b0595133aac530bc"
-        },
-        "1.0.0": {
-          "api_version": 7,
-          "commit_sha": "21748a6e",
-          "released_on": "16-05-2023",
-          "md5sum": "d8a5906ddf8b438bd7e8c2918dd9aaff"
-        }
-      }
-    },
     "open_actor": {
       "description": "Library for injecting tasks to actor objects.",
       "external_url": "",
