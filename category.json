@@ -20,6 +20,19 @@
           "md5sum": "637ea32c6983db2e5ef491099e85d141"
         }
       }
+    },
+    "better_fight": {
+      "description": "Change the feeling of fights with additional visual effects. This mod needs open actor.",
+      "external_url": "",
+      "authors": [
+        {
+          "name": "Aeliux",
+          "email": "itsaeliux@gmail.com"
+        }
+      ],
+      "versions": {
+        "1.0.0": null
+      }
     }
   }
 }
