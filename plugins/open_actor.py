@@ -49,4 +49,6 @@ class OpenActor(babase.Plugin):
     
     def on_app_running(self) -> None:
         bomb.Bomb.__init__ = self.replace('bomb', bomb.Bomb.__init__)
+        bomb.Bomb.handlemessage = self.replace('bomb_handler', bomb.Bomb.handlemessage)
         powerupbox.PowerupBox.__init__ = self.replace('powerupbox', powerupbox.PowerupBox.__init__)
+        powerupbox.PowerupBox.handlemessage = self.replace('powerupbox_handler', powerupbox.PowerupBox.handlemessage)
