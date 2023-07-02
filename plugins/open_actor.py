@@ -1,7 +1,7 @@
 # ba_meta require api 8
 
-import babase  # type: ignore
-from bascenev1lib.actor import bomb, powerupbox, spaz  # type: ignore
+import babase
+from bascenev1lib.actor import bomb, powerupbox, spaz
 
 from typing import Callable
 
