@@ -1,7 +1,7 @@
 # ba_meta require api 8
 
 import babase  # type: ignore
-from bascenev1lib.actor import bomb, powerupbox  # type: ignore
+from bascenev1lib.actor import bomb, powerupbox, spaz  # type: ignore
 
 from typing import Callable
 
@@ -62,4 +62,11 @@ class OpenActor(babase.Plugin):
         )
         powerupbox.PowerupBox.handlemessage = self.replace(
             "powerupbox_handler", powerupbox.PowerupBox.handlemessage
+        )
+        
+        spaz.Spaz.__init__ = self.replace(
+            "spaz", spaz.Spaz.__init__
+        )
+        spaz.Spaz.handlemessage = self.replace(
+            "spaz_handler", spaz.Spaz.handlemessage
         )
