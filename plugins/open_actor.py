@@ -63,7 +63,7 @@ class OpenActor(babase.Plugin):
         powerupbox.PowerupBox.handlemessage = self.replace(
             "powerupbox_handler", powerupbox.PowerupBox.handlemessage
         )
-        
+
         spaz.Spaz.__init__ = self.replace(
             "spaz", spaz.Spaz.__init__
         )
