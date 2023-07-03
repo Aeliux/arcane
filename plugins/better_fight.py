@@ -154,9 +154,9 @@ def hit_handler(self: Spaz, msg: Any) -> bool:
         # Play punch impact sound based on damage if it was a punch.
         if msg.hit_type == "punch":
             self.on_punched(damage)
-            
+
             source = msg.get_source_player(bs.Player)
-            
+
             if source is not None and source.exists():
                 self.activity.stats.player_scored(
                     source,
