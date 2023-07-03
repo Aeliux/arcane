@@ -6,6 +6,7 @@ import baplus
 
 original_get_purchased = baplus.PlusSubsystem.get_purchased
 
+
 @staticmethod
 def get_purchased(item):
     if item.startswith('characters.') or item.startswith('icons.'):
