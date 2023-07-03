@@ -157,7 +157,7 @@ def hit_handler(self: Spaz, msg: Any) -> bool:
 
             source = msg.get_source_player(bs.Player)
 
-            if source is not None and source.exists():
+            if damage >= 100 and source is not None and source.exists():
                 self.activity.stats.player_scored(
                     source,
                     damage // 100,
