@@ -319,7 +319,7 @@ def show_damage_count(
             'flatness': 1.0,
             'shadow': 1.0 if do_big else 0.7,
             'color': color,
-            'scale': scale * (damage_value / 40),
+            'scale': scale * (damage_value / 35),
         },
     )
     # Translate upward.
