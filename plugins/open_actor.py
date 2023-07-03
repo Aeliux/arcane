@@ -9,6 +9,7 @@ early_tasks: dict[str, list[Callable]] = {}
 late_tasks: dict[str, list[Callable]] = {}
 
 hooks_loaded = False
+registered_ids: list[str] = []
 
 
 def inject_task(scope: str, function: Callable, taskType: str = "early"):
@@ -21,6 +22,9 @@ def inject_task(scope: str, function: Callable, taskType: str = "early"):
     else:
         raise ValueError("Task scope must be early or late.")
 
+def safe_inject_task(id: str, scope: str, function: Callable, taskType: str = "early"):
+    if id not in registered_ids:
+        inject_task(scope, function, taskType)
 
 def register_scope(scope: str):
     if early_tasks.get(scope) is None:
