@@ -26,6 +26,7 @@ def inject_task(scope: str, function: Callable, taskType: str = "early"):
 def safe_inject_task(id: str, scope: str, function: Callable, taskType: str = "early"):
     if id not in registered_ids:
         inject_task(scope, function, taskType)
+        registered_ids.append(id)
 
 
 def register_scope(scope: str):
