@@ -50,6 +50,19 @@
           "md5sum": "a401766d11578662129ec684c731bf81"
         }
       }
+    },
+    "unlocker": {
+      "description": "Unlocks BombSquad Pro options.",
+      "external_url": "",
+      "authors": [
+        {
+          "name": "Aeliux",
+          "email": "itsaeliux@gmail.com"
+        }
+      ],
+      "versions": {
+        "1.0.0": null
+      }
     }
   }
 }
