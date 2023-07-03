@@ -8,6 +8,7 @@ from typing import Callable
 early_tasks: dict[str, list[Callable]] = {}
 late_tasks: dict[str, list[Callable]] = {}
 
+hooks_loaded = False
 
 def inject_task(scope: str, function: Callable, taskType: str = "early"):
     register_scope(scope)
@@ -50,23 +51,28 @@ class OpenActor(babase.Plugin):
         return wrapper
 
     def on_app_running(self) -> None:
-        bomb.Bomb.__init__ = self.replace(
-            "bomb", bomb.Bomb.__init__
-        )
-        bomb.Bomb.handlemessage = self.replace(
-            "bomb_handler", bomb.Bomb.handlemessage
-        )
+        global hooks_loaded
+        
+        if not hooks_loaded:
+            bomb.Bomb.__init__ = self.replace(
+                "bomb", bomb.Bomb.__init__
+            )
+            bomb.Bomb.handlemessage = self.replace(
+                "bomb_handler", bomb.Bomb.handlemessage
+            )
 
-        powerupbox.PowerupBox.__init__ = self.replace(
-            "powerupbox", powerupbox.PowerupBox.__init__
-        )
-        powerupbox.PowerupBox.handlemessage = self.replace(
-            "powerupbox_handler", powerupbox.PowerupBox.handlemessage
-        )
+            powerupbox.PowerupBox.__init__ = self.replace(
+                "powerupbox", powerupbox.PowerupBox.__init__
+            )
+            powerupbox.PowerupBox.handlemessage = self.replace(
+                "powerupbox_handler", powerupbox.PowerupBox.handlemessage
+            )
 
-        spaz.Spaz.__init__ = self.replace(
-            "spaz", spaz.Spaz.__init__
-        )
-        spaz.Spaz.handlemessage = self.replace(
-            "spaz_handler", spaz.Spaz.handlemessage
-        )
+            spaz.Spaz.__init__ = self.replace(
+                "spaz", spaz.Spaz.__init__
+            )
+            spaz.Spaz.handlemessage = self.replace(
+                "spaz_handler", spaz.Spaz.handlemessage
+            )
+            
+            hooks_loaded = True
