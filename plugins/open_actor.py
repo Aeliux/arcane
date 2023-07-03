@@ -68,7 +68,7 @@ class OpenActor(babase.Plugin):
             bomb.Bomb.handlemessage = self.replace(
                 "bomb_handler", bomb.Bomb.handlemessage
             )
-            
+
             bomb.Blast.__init__ = self.replace("blast", bomb.Blast.__init__)
 
             powerupbox.PowerupBox.__init__ = self.replace(
