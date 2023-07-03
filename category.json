@@ -111,6 +111,19 @@
           "md5sum": "a63c85d0fc3ba44c85d3881bd774ec7a"
         }
       }
+    },
+    "colorful": {
+      "description": "Change feeling of your game by making game elements more colorful!",
+      "external_url": "",
+      "authors": [
+        {
+          "name": "Aeliux",
+          "email": "itsaeliux@gmail.com"
+        }
+      ],
+      "versions": {
+        "1.0.0": null
+      }
     }
   }
 }
