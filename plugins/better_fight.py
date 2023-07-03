@@ -5,7 +5,7 @@ from bascenev1lib.actor.spaz import Spaz
 import bascenev1 as bs
 import babase
 
-from open_actor import inject_task
+from open_actor import safe_inject_task
 
 from typing import Any, Sequence
 import random
@@ -370,4 +370,4 @@ def show_damage_count(
 # ba_meta export babase.Plugin
 class BetterFight(babase.Plugin):
     def on_app_running(self) -> None:
-        inject_task("spaz_handler", hit_handler, "early")
+        safe_inject_task("punch_handler", "spaz_handler", hit_handler, "early")
