@@ -4,7 +4,7 @@ import babase as ba
 import bascenev1 as bs
 
 from bascenev1lib.actor.bomb import Blast
-from open_actor import OpenActor, safe_inject_task
+from open_actor import safe_inject_task
 
 import random
 
@@ -22,10 +22,10 @@ def colored_blast(self: Blast, **kwargs):
     else:
         s.color = s2.color = s3.color = (random.random(), random.random(), random.random())
 
-    bs.animate(s, "presence", {3000: 1, 13000: 0})
-    bs.animate(s2, "presence", {3000: 1, 13000: 0})
-    bs.apptimer(13000, s.delete)
-    bs.apptimer(13000, s2.delete)
+    bs.animate(s, "presence", {3: 1, 13: 0})
+    bs.animate(s2, "presence", {3: 1, 13: 0})
+    bs.apptimer(13, s.delete)
+    bs.apptimer(13, s2.delete)
 
 
 # ba_meta export plugin
