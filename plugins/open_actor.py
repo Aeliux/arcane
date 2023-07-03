@@ -10,6 +10,7 @@ late_tasks: dict[str, list[Callable]] = {}
 
 hooks_loaded = False
 
+
 def inject_task(scope: str, function: Callable, taskType: str = "early"):
     register_scope(scope)
 
@@ -52,7 +53,7 @@ class OpenActor(babase.Plugin):
 
     def on_app_running(self) -> None:
         global hooks_loaded
-        
+
         if not hooks_loaded:
             bomb.Bomb.__init__ = self.replace(
                 "bomb", bomb.Bomb.__init__
@@ -74,5 +75,5 @@ class OpenActor(babase.Plugin):
             spaz.Spaz.handlemessage = self.replace(
                 "spaz_handler", spaz.Spaz.handlemessage
             )
-            
+
             hooks_loaded = True
