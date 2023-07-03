@@ -161,7 +161,8 @@ def hit_handler(self: Spaz, msg: Any) -> bool:
                 self.activity.stats.player_scored(
                     source,
                     damage // 100,
-                    display=damage >= 500
+                    display=damage >= 500,
+                    screenmessage=False
                 )
 
             # If damage was significant, lets show it.
