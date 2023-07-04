@@ -47,9 +47,10 @@ def register_scope(scope: str, ignore_check=False):
     if late_tasks.get(scope) is None:
         print_msg = True
         late_tasks[scope] = []
-        
+
     if print_msg and not ignore_check and False:
         print(f"scope {scope} not found, creating new scope!")
+
 
 class PowerupType:
     name: str
@@ -77,19 +78,20 @@ class PowerupType:
         self.scale = scale
         self.rarity = rarity
         self.frequency = frequency
-        
+
     def _register_factory(self, factory: Any) -> None:
         if not hasattr(factory, "open_powerup"):
             factory.open_powerup = {}
-        
+
     def get_texture(self) -> bs.Texture:
         factory: Any = PowerupBoxFactory.get()  # suppress errors
         self._register_factory(factory)
         tex = factory.open_powerup.get(f'tex_{self.texture_name}', None)
         if tex is None:
-            tex = factory.open_powerup[f'tex_{self.texture_name}'] = bs.gettexture(self.texture_name)
+            tex = factory.open_powerup[f'tex_{self.texture_name}'] = bs.gettexture(
+                self.texture_name)
         return tex
-    
+
     def get_mesh(self) -> bs.Mesh:
         factory: Any = PowerupBoxFactory.get()  # suppress errors
         self._register_factory(factory)
@@ -99,17 +101,18 @@ class PowerupType:
         if mesh is None:
             mesh = factory.open_powerup[f'mesh_{self.mesh_name}'] = bs.getmesh(self.mesh_name)
         return mesh
-    
+
     def on_apply(self, spaz: Spaz):
         """
         Called when the powerup is consumed by a spaz
         """
         pass
 
+
 class OpenPowerupBox:
     powerups: dict[str, PowerupType] = {}
     default_powerup: Callable
-    
+
     @staticmethod
     def powerup_task(
         self: PowerupBox,  # type: ignore
@@ -124,7 +127,7 @@ class OpenPowerupBox:
         factory = PowerupBoxFactory.get()
         self.poweruptype = poweruptype
         self._powersgiven = False
-        
+
         mesh = factory.mesh
         interval = DEFAULT_POWERUP_INTERVAL
         scale = 1.0
@@ -344,16 +347,15 @@ class OpenPowerupBox:
     def get_powerups(cls) -> Sequence[tuple[str, int]]:
         dlist = cls.default_powerup()
         extra: list[tuple[str, int]] = []
-        
+
         for p in cls.powerups.values():
             if p.rarity == 1:
                 extra.append((p.name, p.frequency),)
             elif p.rarity > 1:
                 if random.randint(1, p.rarity) == p.rarity:
                     extra.append((p.name, p.frequency),)
-                    
+
         return dlist + tuple(extra)
-        
 
     @classmethod
     def register_powerup(cls, powerup: PowerupType):
@@ -400,5 +402,5 @@ class OpenActor(ba.Plugin):
             )
 
             hooks_loaded = True
-        
+
         safe_inject_task('powerup_apply', 'spaz_handler', OpenPowerupBox.powerup_handle)
