@@ -1,9 +1,16 @@
 # ba_meta require api 8
 
-import babase
+import babase as ba
+import bascenev1 as bs
 from bascenev1lib.actor import bomb, powerupbox, spaz
 
-from typing import Callable
+from bascenev1lib.actor.powerupbox import (
+    PowerupBox,
+    PowerupBoxFactory,
+    DEFAULT_POWERUP_INTERVAL,
+)
+
+from typing import Callable, Sequence, Any
 
 early_tasks: dict[str, list[Callable]] = {}
 late_tasks: dict[str, list[Callable]] = {}
@@ -36,9 +43,139 @@ def register_scope(scope: str):
     if late_tasks.get(scope) is None:
         late_tasks[scope] = []
 
+class PowerupType:
+    name: str
+    texture_name: str
+    mesh_name: str | None
+    interval: float
+    scale: float
+
+    def __init__(
+        self,
+        name: str,
+        texturename: str,
+        meshname: str | None = None,
+        interval: float = DEFAULT_POWERUP_INTERVAL,
+        scale: float = 1.0
+    ) -> None:
+        self.name = name
+        self.texture_name = texturename
+        self.mesh_name = meshname
+        self.interval = interval
+        self.scale = scale
+        
+    def _register_factory(self, factory: Any) -> None:
+        if not hasattr(factory, "open_powerup"):
+            factory.open_powerup = {}
+        
+    def get_texture(self) -> bs.Texture:
+        factory: Any = PowerupBoxFactory.get()  # suppress errors
+        self._register_factory(factory)
+        tex = factory.open_powerup.get(f'tex_{self.texture_name}', None)
+        if tex is None:
+            tex = factory.open_powerup[f'tex_{self.texture_name}'] = bs.gettexture(self.texture_name)
+        return tex
+    
+    def get_mesh(self) -> bs.Mesh:
+        factory: Any = PowerupBoxFactory.get()  # suppress errors
+        self._register_factory(factory)
+        if self.mesh_name is None:
+            return factory.mesh
+        mesh = factory.open_powerup.get(f'mesh_{self.mesh_name}', None)
+        if mesh is None:
+            mesh = factory.open_powerup[f'mesh_{self.mesh_name}'] = bs.getmesh(self.mesh_name)
+        return mesh
+
+class OpenPowerupBox:
+    powerups: dict[str, PowerupType] = {}
+    
+    @staticmethod
+    def powerup_task(
+        self: PowerupBox,  # type: ignore
+        position: Sequence[float] = (0.0, 1.0, 0.0),
+        poweruptype: str = "triple_bombs",
+        expire: bool = True,
+    ):
+        # call Actor.__init__
+        super(PowerupBox, self).__init__()
+
+        shared = powerupbox.SharedObjects.get()
+        factory = PowerupBoxFactory.get()
+        self.poweruptype = poweruptype
+        self._powersgiven = False
+        
+        mesh = factory.mesh
+        interval = DEFAULT_POWERUP_INTERVAL
+        scale = 1.0
+
+        if poweruptype == "triple_bombs":
+            tex = factory.tex_bomb
+        elif poweruptype == "punch":
+            tex = factory.tex_punch
+        elif poweruptype == "ice_bombs":
+            tex = factory.tex_ice_bombs
+        elif poweruptype == "impact_bombs":
+            tex = factory.tex_impact_bombs
+        elif poweruptype == "land_mines":
+            tex = factory.tex_land_mines
+        elif poweruptype == "sticky_bombs":
+            tex = factory.tex_sticky_bombs
+        elif poweruptype == "shield":
+            tex = factory.tex_shield
+        elif poweruptype == "health":
+            tex = factory.tex_health
+        elif poweruptype == "curse":
+            tex = factory.tex_curse
+        elif poweruptype in OpenPowerupBox.powerups:
+            _obj = OpenPowerupBox.powerups[poweruptype]
+            tex = _obj.get_texture()
+            mesh = _obj.get_mesh()
+            interval = _obj.interval
+            scale = _obj.scale
+        else:
+            raise ValueError("invalid poweruptype: " + str(poweruptype))
+
+        if len(position) != 3:
+            raise ValueError("expected 3 floats for position")
+
+        self.node = bs.newnode(
+            "prop",
+            delegate=self,
+            attrs={
+                "body": 'box',
+                "position": position,
+                "mesh": mesh,
+                "light_mesh": factory.mesh_simple,
+                "shadow_size": 0.5,
+                "color_texture": tex,
+                "reflection": "powerup",
+                "reflection_scale": [1.0],
+                "materials": (factory.powerup_material, shared.object_material),
+            },
+        )
+
+        # Animate in.
+        curve = bs.animate(self.node, "mesh_scale", {0: 0, 0.14: 1.6, 0.2: scale})
+        bs.timer(0.2, curve.delete)
+
+        if expire:
+            bs.timer(
+                interval - 2.5,
+                bs.WeakCall(self._start_flashing),
+            )
+            bs.timer(
+                interval - 1.0,
+                bs.WeakCall(self.handlemessage, bs.DieMessage()),
+            )
+
+    @classmethod
+    def register_powerup(cls, powerup: PowerupType):
+        if powerup.name not in cls.powerups:
+            cls.powerups[powerup.name] = powerup
+
 
 # ba_meta export babase.Plugin
-class OpenActor(babase.Plugin):
+class OpenActor(ba.Plugin):
     @staticmethod
     def replace(scope: str, function: Callable):
         register_scope(scope)
@@ -62,19 +199,13 @@ class OpenActor(babase.Plugin):
         global hooks_loaded
 
         if not hooks_loaded:
-            bomb.Bomb.__init__ = self.replace(
-                "bomb", bomb.Bomb.__init__
-            )
+            bomb.Bomb.__init__ = self.replace("bomb", bomb.Bomb.__init__)
 
             bomb.Blast.__init__ = self.replace("blast", bomb.Blast.__init__)
 
-            powerupbox.PowerupBox.__init__ = self.replace(
-                "powerupbox", powerupbox.PowerupBox.__init__
-            )
+            powerupbox.PowerupBox.__init__ = OpenPowerupBox.powerup_task
 
-            spaz.Spaz.__init__ = self.replace(
-                "spaz", spaz.Spaz.__init__
-            )
+            spaz.Spaz.__init__ = self.replace("spaz", spaz.Spaz.__init__)
             spaz.Spaz.handlemessage = self.replace(
                 "spaz_handler", spaz.Spaz.handlemessage
             )
