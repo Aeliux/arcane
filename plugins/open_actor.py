@@ -11,6 +11,7 @@ from bascenev1lib.actor.powerupbox import (
 )
 
 from typing import Callable, Sequence, Any
+import random
 
 early_tasks: dict[str, list[Callable]] = {}
 late_tasks: dict[str, list[Callable]] = {}
@@ -49,6 +50,8 @@ class PowerupType:
     mesh_name: str | None
     interval: float
     scale: float
+    rarity: int
+    frequency: int
 
     def __init__(
         self,
@@ -56,13 +59,17 @@ class PowerupType:
         texturename: str,
         meshname: str | None = None,
         interval: float = DEFAULT_POWERUP_INTERVAL,
-        scale: float = 1.0
+        scale: float = 1.0,
+        rarity: int = 1,
+        frequency: int = 1
     ) -> None:
         self.name = name
         self.texture_name = texturename
         self.mesh_name = meshname
         self.interval = interval
         self.scale = scale
+        self.rarity = rarity
+        self.frequency = frequency
         
     def _register_factory(self, factory: Any) -> None:
         if not hasattr(factory, "open_powerup"):
@@ -88,6 +95,7 @@ class PowerupType:
 
 class OpenPowerupBox:
     powerups: dict[str, PowerupType] = {}
+    default_powerup: Callable
     
     @staticmethod
     def powerup_task(
@@ -169,6 +177,21 @@ class OpenPowerupBox:
             )
 
     @classmethod
+    def get_powerups(cls) -> Sequence[tuple[str, int]]:
+        dlist = cls.default_powerup()
+        extra: list[tuple[str, int]] = []
+        
+        for p in cls.powerups.values():
+            if p.rarity == 1:
+                extra.append((p.name, p.frequency),)
+            elif p.rarity > 1:
+                if random.randint(1, p.rarity) == p.rarity:
+                    extra.append((p.name, p.frequency),)
+                    
+        return dlist + tuple(extra)
+        
+
+    @classmethod
     def register_powerup(cls, powerup: PowerupType):
         if powerup.name not in cls.powerups:
             cls.powerups[powerup.name] = powerup
@@ -204,6 +227,8 @@ class OpenActor(ba.Plugin):
             bomb.Blast.__init__ = self.replace("blast", bomb.Blast.__init__)
 
             powerupbox.PowerupBox.__init__ = OpenPowerupBox.powerup_task
+            OpenPowerupBox.default_powerup = bs.get_default_powerup_distribution
+            bs.get_default_powerup_distribution = OpenPowerupBox.get_powerups
 
             spaz.Spaz.__init__ = self.replace("spaz", spaz.Spaz.__init__)
             spaz.Spaz.handlemessage = self.replace(
