@@ -3,6 +3,7 @@
 import babase as ba
 import bascenev1 as bs
 from bascenev1lib.actor import bomb, powerupbox, spaz
+from bascenev1lib.actor.spaz import Spaz, SpazFactory, POWERUP_WEAR_OFF_TIME
 
 from bascenev1lib.actor.powerupbox import (
     PowerupBox,
@@ -37,12 +38,18 @@ def safe_inject_task(id: str, scope: str, function: Callable, taskType: str = "e
         registered_ids.append(id)
 
 
-def register_scope(scope: str):
+def register_scope(scope: str, ignore_check=False):
+    print_msg = False
     if early_tasks.get(scope) is None:
+        print_msg = True
         early_tasks[scope] = []
 
     if late_tasks.get(scope) is None:
+        print_msg = True
         late_tasks[scope] = []
+        
+    if print_msg and not ignore_check and False:
+        print(f"scope {scope} not found, creating new scope!")
 
 class PowerupType:
     name: str
@@ -92,6 +99,12 @@ class PowerupType:
         if mesh is None:
             mesh = factory.open_powerup[f'mesh_{self.mesh_name}'] = bs.getmesh(self.mesh_name)
         return mesh
+    
+    def on_apply(self, spaz: Spaz):
+        """
+        Called when the powerup is consumed by a spaz
+        """
+        pass
 
 class OpenPowerupBox:
     powerups: dict[str, PowerupType] = {}
@@ -176,6 +189,157 @@ class OpenPowerupBox:
                 bs.WeakCall(self.handlemessage, bs.DieMessage()),
             )
 
+    @staticmethod
+    def powerup_handle(self: Spaz, msg: bs.PowerupMessage) -> bool:
+        if isinstance(msg, bs.PowerupMessage):
+            if self._dead or not self.node:
+                return True
+            if self.pick_up_powerup_callback is not None:
+                self.pick_up_powerup_callback(self)
+            if msg.poweruptype == 'triple_bombs':
+                tex = PowerupBoxFactory.get().tex_bomb
+                self._flash_billboard(tex)
+                self.set_bomb_count(3)
+                if self.powerups_expire:
+                    self.node.mini_billboard_1_texture = tex
+                    t_ms = int(bs.time() * 1000.0)
+                    assert isinstance(t_ms, int)
+                    self.node.mini_billboard_1_start_time = t_ms
+                    self.node.mini_billboard_1_end_time = (
+                        t_ms + POWERUP_WEAR_OFF_TIME
+                    )
+                    self._multi_bomb_wear_off_flash_timer = bs.Timer(
+                        (POWERUP_WEAR_OFF_TIME - 2000) / 1000.0,
+                        bs.WeakCall(self._multi_bomb_wear_off_flash),
+                    )
+                    self._multi_bomb_wear_off_timer = bs.Timer(
+                        POWERUP_WEAR_OFF_TIME / 1000.0,
+                        bs.WeakCall(self._multi_bomb_wear_off),
+                    )
+            elif msg.poweruptype == 'land_mines':
+                self.set_land_mine_count(min(self.land_mine_count + 3, 3))
+            elif msg.poweruptype == 'impact_bombs':
+                self.bomb_type = 'impact'
+                tex = self._get_bomb_type_tex()
+                self._flash_billboard(tex)
+                if self.powerups_expire:
+                    self.node.mini_billboard_2_texture = tex
+                    t_ms = int(bs.time() * 1000.0)
+                    assert isinstance(t_ms, int)
+                    self.node.mini_billboard_2_start_time = t_ms
+                    self.node.mini_billboard_2_end_time = (
+                        t_ms + POWERUP_WEAR_OFF_TIME
+                    )
+                    self._bomb_wear_off_flash_timer = bs.Timer(
+                        (POWERUP_WEAR_OFF_TIME - 2000) / 1000.0,
+                        bs.WeakCall(self._bomb_wear_off_flash),
+                    )
+                    self._bomb_wear_off_timer = bs.Timer(
+                        POWERUP_WEAR_OFF_TIME / 1000.0,
+                        bs.WeakCall(self._bomb_wear_off),
+                    )
+            elif msg.poweruptype == 'sticky_bombs':
+                self.bomb_type = 'sticky'
+                tex = self._get_bomb_type_tex()
+                self._flash_billboard(tex)
+                if self.powerups_expire:
+                    self.node.mini_billboard_2_texture = tex
+                    t_ms = int(bs.time() * 1000.0)
+                    assert isinstance(t_ms, int)
+                    self.node.mini_billboard_2_start_time = t_ms
+                    self.node.mini_billboard_2_end_time = (
+                        t_ms + POWERUP_WEAR_OFF_TIME
+                    )
+                    self._bomb_wear_off_flash_timer = bs.Timer(
+                        (POWERUP_WEAR_OFF_TIME - 2000) / 1000.0,
+                        bs.WeakCall(self._bomb_wear_off_flash),
+                    )
+                    self._bomb_wear_off_timer = bs.Timer(
+                        POWERUP_WEAR_OFF_TIME / 1000.0,
+                        bs.WeakCall(self._bomb_wear_off),
+                    )
+            elif msg.poweruptype == 'punch':
+                tex = PowerupBoxFactory.get().tex_punch
+                self._flash_billboard(tex)
+                self.equip_boxing_gloves()
+                if self.powerups_expire and not self.default_boxing_gloves:
+                    self.node.boxing_gloves_flashing = False
+                    self.node.mini_billboard_3_texture = tex
+                    t_ms = int(bs.time() * 1000.0)
+                    assert isinstance(t_ms, int)
+                    self.node.mini_billboard_3_start_time = t_ms
+                    self.node.mini_billboard_3_end_time = (
+                        t_ms + POWERUP_WEAR_OFF_TIME
+                    )
+                    self._boxing_gloves_wear_off_flash_timer = bs.Timer(
+                        (POWERUP_WEAR_OFF_TIME - 2000) / 1000.0,
+                        bs.WeakCall(self._gloves_wear_off_flash),
+                    )
+                    self._boxing_gloves_wear_off_timer = bs.Timer(
+                        POWERUP_WEAR_OFF_TIME / 1000.0,
+                        bs.WeakCall(self._gloves_wear_off),
+                    )
+            elif msg.poweruptype == 'shield':
+                factory = SpazFactory.get()
+
+                # Let's allow powerup-equipped shields to lose hp over time.
+                self.equip_shields(decay=factory.shield_decay_rate > 0)
+            elif msg.poweruptype == 'curse':
+                self.curse()
+            elif msg.poweruptype == 'ice_bombs':
+                self.bomb_type = 'ice'
+                tex = self._get_bomb_type_tex()
+                self._flash_billboard(tex)
+                if self.powerups_expire:
+                    self.node.mini_billboard_2_texture = tex
+                    t_ms = int(bs.time() * 1000.0)
+                    assert isinstance(t_ms, int)
+                    self.node.mini_billboard_2_start_time = t_ms
+                    self.node.mini_billboard_2_end_time = (
+                        t_ms + POWERUP_WEAR_OFF_TIME
+                    )
+                    self._bomb_wear_off_flash_timer = bs.Timer(
+                        (POWERUP_WEAR_OFF_TIME - 2000) / 1000.0,
+                        bs.WeakCall(self._bomb_wear_off_flash),
+                    )
+                    self._bomb_wear_off_timer = bs.Timer(
+                        POWERUP_WEAR_OFF_TIME / 1000.0,
+                        bs.WeakCall(self._bomb_wear_off),
+                    )
+            elif msg.poweruptype == 'health':
+                if self._cursed:
+                    self._cursed = False
+
+                    # Remove cursed material.
+                    factory = SpazFactory.get()
+                    for attr in ['materials', 'roller_materials']:
+                        materials = getattr(self.node, attr)
+                        if factory.curse_material in materials:
+                            setattr(
+                                self.node,
+                                attr,
+                                tuple(
+                                    m
+                                    for m in materials
+                                    if m != factory.curse_material
+                                ),
+                            )
+                    self.node.curse_death_time = 0
+                self.hitpoints = self.hitpoints_max
+                self._flash_billboard(PowerupBoxFactory.get().tex_health)
+                self.node.hurt = 0
+                self._last_hit_time = None
+                self._num_times_hit = 0
+            elif msg.poweruptype in OpenPowerupBox.powerups:
+                OpenPowerupBox.powerups[msg.poweruptype].on_apply(self)
+
+            self.node.handlemessage('flash')
+            if msg.sourcenode:
+                msg.sourcenode.handlemessage(bs.PowerupAcceptMessage())
+            return True
+        else:
+            return False
+
     @classmethod
     def get_powerups(cls) -> Sequence[tuple[str, int]]:
         dlist = cls.default_powerup()
@@ -201,7 +365,7 @@ class OpenPowerupBox:
 class OpenActor(ba.Plugin):
     @staticmethod
     def replace(scope: str, function: Callable):
-        register_scope(scope)
+        register_scope(scope, True)
 
         def wrapper(*args, **kwargs):
             refuse_run = False
@@ -236,3 +400,5 @@ class OpenActor(ba.Plugin):
             )
 
             hooks_loaded = True
+        
+        safe_inject_task('powerup_apply', 'spaz_handler', OpenPowerupBox.powerup_handle)
