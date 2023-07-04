@@ -8,9 +8,11 @@ import bauiv1 as bui
 from bauiv1lib import party
 import bascenev1._hooks
 
+
 def msg_receiver(msg: str, clientID: int):
     bs.screenmessage("message received")
     return 'yea boy'
+
 
 def msg_receiver2(msg: str):
     bs.screenmessage("kiiir")
