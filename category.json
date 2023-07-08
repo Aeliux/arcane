@@ -152,6 +152,19 @@
           "md5sum": "b544c0e348c5190fa2e7c6801726f3cf"
         }
       }
-    }
+    },
+    "allow_pause": {
+      "description": "Adds ability to pause multi player games.",
+      "external_url": "",
+      "authors": [
+        {
+          "name": "Aeliux",
+          "email": "itsaeliux@gmail.com"
+        }
+      ],
+      "versions": {
+        "1.0.0": null,
+      }
+    },
   }
 }
