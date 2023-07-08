@@ -69,7 +69,7 @@ class PowerupType:
         interval: float = DEFAULT_POWERUP_INTERVAL,
         scale: float = 1.0,
         rarity: int = 1,
-        frequency: int = 1
+        frequency: int = 1,
     ) -> None:
         self.name = name
         self.texture_name = texturename
@@ -86,10 +86,11 @@ class PowerupType:
     def get_texture(self) -> bs.Texture:
         factory: Any = PowerupBoxFactory.get()  # suppress errors
         self._register_factory(factory)
-        tex = factory.open_powerup.get(f'tex_{self.texture_name}', None)
+        tex = factory.open_powerup.get(f"tex_{self.texture_name}", None)
         if tex is None:
-            tex = factory.open_powerup[f'tex_{self.texture_name}'] = bs.gettexture(
-                self.texture_name)
+            tex = factory.open_powerup[f"tex_{self.texture_name}"] = bs.gettexture(
+                self.texture_name
+            )
         return tex
 
     def get_mesh(self) -> bs.Mesh:
@@ -97,14 +98,35 @@ class PowerupType:
         self._register_factory(factory)
         if self.mesh_name is None:
             return factory.mesh
-        mesh = factory.open_powerup.get(f'mesh_{self.mesh_name}', None)
+        mesh = factory.open_powerup.get(f"mesh_{self.mesh_name}", None)
         if mesh is None:
-            mesh = factory.open_powerup[f'mesh_{self.mesh_name}'] = bs.getmesh(self.mesh_name)
+            mesh = factory.open_powerup[f"mesh_{self.mesh_name}"] = bs.getmesh(
+                self.mesh_name
+            )
         return mesh
 
     def on_apply(self, spaz: Spaz):
         """
         Called when the powerup is consumed by a spaz
+        """
+        pass
+
+    def on_init(
+        self,
+        object: PowerupBox,
+        position: Sequence[float] = (0.0, 1.0, 0.0),
+        poweruptype: str = "triple_bombs",
+        expire: bool = True,
+    ):
+        """
+        Called before creating the powerup node
+        """
+        pass
+    
+    def on_create(self, object: PowerupBox):
+        """
+        Called right after creating the powerup box node
+        The node is accessible in object.node
         """
         pass
 
@@ -156,6 +178,8 @@ class OpenPowerupBox:
             mesh = _obj.get_mesh()
             interval = _obj.interval
             scale = _obj.scale
+            # call on_init
+            _obj.on_init(self, position, poweruptype, expire)
         else:
             raise ValueError("invalid poweruptype: " + str(poweruptype))
 
@@ -166,7 +190,7 @@ class OpenPowerupBox:
             "prop",
             delegate=self,
             attrs={
-                "body": 'box',
+                "body": "box",
                 "position": position,
                 "mesh": mesh,
                 "light_mesh": factory.mesh_simple,
@@ -177,6 +201,10 @@ class OpenPowerupBox:
                 "materials": (factory.powerup_material, shared.object_material),
             },
         )
+
+        # call on_create
+        if poweruptype in OpenPowerupBox.powerups:
+            OpenPowerupBox.powerups[poweruptype].on_create(self)
 
         # Animate in.
         curve = bs.animate(self.node, "mesh_scale", {0: 0, 0.14: 1.6, 0.2: scale})
@@ -199,7 +227,7 @@ class OpenPowerupBox:
                 return True
             if self.pick_up_powerup_callback is not None:
                 self.pick_up_powerup_callback(self)
-            if msg.poweruptype == 'triple_bombs':
+            if msg.poweruptype == "triple_bombs":
                 tex = PowerupBoxFactory.get().tex_bomb
                 self._flash_billboard(tex)
                 self.set_bomb_count(3)
@@ -208,9 +236,7 @@ class OpenPowerupBox:
                     t_ms = int(bs.time() * 1000.0)
                     assert isinstance(t_ms, int)
                     self.node.mini_billboard_1_start_time = t_ms
-                    self.node.mini_billboard_1_end_time = (
-                        t_ms + POWERUP_WEAR_OFF_TIME
-                    )
+                    self.node.mini_billboard_1_end_time = t_ms + POWERUP_WEAR_OFF_TIME
                     self._multi_bomb_wear_off_flash_timer = bs.Timer(
                         (POWERUP_WEAR_OFF_TIME - 2000) / 1000.0,
                         bs.WeakCall(self._multi_bomb_wear_off_flash),
@@ -219,10 +245,10 @@ class OpenPowerupBox:
                         POWERUP_WEAR_OFF_TIME / 1000.0,
                         bs.WeakCall(self._multi_bomb_wear_off),
                     )
-            elif msg.poweruptype == 'land_mines':
+            elif msg.poweruptype == "land_mines":
                 self.set_land_mine_count(min(self.land_mine_count + 3, 3))
-            elif msg.poweruptype == 'impact_bombs':
-                self.bomb_type = 'impact'
+            elif msg.poweruptype == "impact_bombs":
+                self.bomb_type = "impact"
                 tex = self._get_bomb_type_tex()
                 self._flash_billboard(tex)
                 if self.powerups_expire:
@@ -230,9 +256,7 @@ class OpenPowerupBox:
                     t_ms = int(bs.time() * 1000.0)
                     assert isinstance(t_ms, int)
                     self.node.mini_billboard_2_start_time = t_ms
-                    self.node.mini_billboard_2_end_time = (
-                        t_ms + POWERUP_WEAR_OFF_TIME
-                    )
+                    self.node.mini_billboard_2_end_time = t_ms + POWERUP_WEAR_OFF_TIME
                     self._bomb_wear_off_flash_timer = bs.Timer(
                         (POWERUP_WEAR_OFF_TIME - 2000) / 1000.0,
                         bs.WeakCall(self._bomb_wear_off_flash),
@@ -241,8 +265,8 @@ class OpenPowerupBox:
                         POWERUP_WEAR_OFF_TIME / 1000.0,
                         bs.WeakCall(self._bomb_wear_off),
                     )
-            elif msg.poweruptype == 'sticky_bombs':
-                self.bomb_type = 'sticky'
+            elif msg.poweruptype == "sticky_bombs":
+                self.bomb_type = "sticky"
                 tex = self._get_bomb_type_tex()
                 self._flash_billboard(tex)
                 if self.powerups_expire:
@@ -250,9 +274,7 @@ class OpenPowerupBox:
                     t_ms = int(bs.time() * 1000.0)
                     assert isinstance(t_ms, int)
                     self.node.mini_billboard_2_start_time = t_ms
-                    self.node.mini_billboard_2_end_time = (
-                        t_ms + POWERUP_WEAR_OFF_TIME
-                    )
+                    self.node.mini_billboard_2_end_time = t_ms + POWERUP_WEAR_OFF_TIME
                     self._bomb_wear_off_flash_timer = bs.Timer(
                         (POWERUP_WEAR_OFF_TIME - 2000) / 1000.0,
                         bs.WeakCall(self._bomb_wear_off_flash),
@@ -261,7 +283,7 @@ class OpenPowerupBox:
                         POWERUP_WEAR_OFF_TIME / 1000.0,
                         bs.WeakCall(self._bomb_wear_off),
                     )
-            elif msg.poweruptype == 'punch':
+            elif msg.poweruptype == "punch":
                 tex = PowerupBoxFactory.get().tex_punch
                 self._flash_billboard(tex)
                 self.equip_boxing_gloves()
@@ -271,9 +293,7 @@ class OpenPowerupBox:
                     t_ms = int(bs.time() * 1000.0)
                     assert isinstance(t_ms, int)
                     self.node.mini_billboard_3_start_time = t_ms
-                    self.node.mini_billboard_3_end_time = (
-                        t_ms + POWERUP_WEAR_OFF_TIME
-                    )
+                    self.node.mini_billboard_3_end_time = t_ms + POWERUP_WEAR_OFF_TIME
                     self._boxing_gloves_wear_off_flash_timer = bs.Timer(
                         (POWERUP_WEAR_OFF_TIME - 2000) / 1000.0,
                         bs.WeakCall(self._gloves_wear_off_flash),
@@ -282,15 +302,15 @@ class OpenPowerupBox:
                         POWERUP_WEAR_OFF_TIME / 1000.0,
                         bs.WeakCall(self._gloves_wear_off),
                     )
-            elif msg.poweruptype == 'shield':
+            elif msg.poweruptype == "shield":
                 factory = SpazFactory.get()
 
                 # Let's allow powerup-equipped shields to lose hp over time.
                 self.equip_shields(decay=factory.shield_decay_rate > 0)
-            elif msg.poweruptype == 'curse':
+            elif msg.poweruptype == "curse":
                 self.curse()
-            elif msg.poweruptype == 'ice_bombs':
-                self.bomb_type = 'ice'
+            elif msg.poweruptype == "ice_bombs":
+                self.bomb_type = "ice"
                 tex = self._get_bomb_type_tex()
                 self._flash_billboard(tex)
                 if self.powerups_expire:
@@ -298,9 +318,7 @@ class OpenPowerupBox:
                     t_ms = int(bs.time() * 1000.0)
                     assert isinstance(t_ms, int)
                     self.node.mini_billboard_2_start_time = t_ms
-                    self.node.mini_billboard_2_end_time = (
-                        t_ms + POWERUP_WEAR_OFF_TIME
-                    )
+                    self.node.mini_billboard_2_end_time = t_ms + POWERUP_WEAR_OFF_TIME
                     self._bomb_wear_off_flash_timer = bs.Timer(
                         (POWERUP_WEAR_OFF_TIME - 2000) / 1000.0,
                         bs.WeakCall(self._bomb_wear_off_flash),
@@ -309,22 +327,20 @@ class OpenPowerupBox:
                         POWERUP_WEAR_OFF_TIME / 1000.0,
                         bs.WeakCall(self._bomb_wear_off),
                     )
-            elif msg.poweruptype == 'health':
+            elif msg.poweruptype == "health":
                 if self._cursed:
                     self._cursed = False
 
                     # Remove cursed material.
                     factory = SpazFactory.get()
-                    for attr in ['materials', 'roller_materials']:
+                    for attr in ["materials", "roller_materials"]:
                         materials = getattr(self.node, attr)
                         if factory.curse_material in materials:
                             setattr(
                                 self.node,
                                 attr,
                                 tuple(
-                                    m
-                                    for m in materials
-                                    if m != factory.curse_material
+                                    m for m in materials if m != factory.curse_material
                                 ),
                             )
                     self.node.curse_death_time = 0
@@ -336,7 +352,7 @@ class OpenPowerupBox:
             elif msg.poweruptype in OpenPowerupBox.powerups:
                 OpenPowerupBox.powerups[msg.poweruptype].on_apply(self)
 
-            self.node.handlemessage('flash')
+            self.node.handlemessage("flash")
             if msg.sourcenode:
                 msg.sourcenode.handlemessage(bs.PowerupAcceptMessage())
             return True
@@ -350,10 +366,14 @@ class OpenPowerupBox:
 
         for p in cls.powerups.values():
             if p.rarity == 1:
-                extra.append((p.name, p.frequency),)
+                extra.append(
+                    (p.name, p.frequency),
+                )
             elif p.rarity > 1:
                 if random.randint(1, p.rarity) == p.rarity:
-                    extra.append((p.name, p.frequency),)
+                    extra.append(
+                        (p.name, p.frequency),
+                    )
 
         return dlist + tuple(extra)
 
@@ -404,4 +424,4 @@ class OpenActor(ba.Plugin):
 
             hooks_loaded = True
 
-        safe_inject_task('powerup_apply', 'spaz_handler', OpenPowerupBox.powerup_handle)
+        safe_inject_task("powerup_apply", "spaz_handler", OpenPowerupBox.powerup_handle)
