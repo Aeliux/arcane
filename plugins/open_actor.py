@@ -371,16 +371,17 @@ class OpenActor(ba.Plugin):
 
         def wrapper(*args, **kwargs):
             refuse_run = False
+            res = None
 
             for t in early_tasks[scope]:
                 if t(*args, **kwargs):
                     refuse_run = True
 
             if not refuse_run:
-                function(*args, **kwargs)
+                res = function(*args, **kwargs)
 
             for t in late_tasks[scope]:
-                t(*args, **kwargs)
+                t(*args, _result=res, **kwargs)
 
         return wrapper
 
