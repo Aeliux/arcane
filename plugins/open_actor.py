@@ -122,7 +122,7 @@ class PowerupType:
         Called before creating the powerup node
         """
         pass
-    
+
     def on_create(self, object: PowerupBox):
         """
         Called right after creating the powerup box node
