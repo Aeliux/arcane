@@ -19,11 +19,11 @@
     "develop": {
         "badev": {
             "hashes": [
-                "sha256:1a8b18dceba2db3022a8a3b9ed73ec022a531767a0bfd8ae296f969ec6de931b",
-                "sha256:ace52c644804613e5919ae3532517a85f6451a1f1419da5051fefc69eee0eedf"
+                "sha256:aff58617587a1abf91f5f54ad6931d53ca48372d67cb018414b421a15e8c0392",
+                "sha256:e14cb6ad2e7ab472b7073f5215c34f9804eb85d34dca53596346f55ecdb5918f"
             ],
             "index": "pypi",
-            "version": "==1.7.21"
+            "version": "==1.7.27"
         }
     }
 }
